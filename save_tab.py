@@ -3,6 +3,7 @@ import hsi_database
 import int_input_qt
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
+import qt_line
 from PyQt6.QtWidgets import *
 import qt_utilities
 
@@ -34,8 +35,31 @@ class SaveTabWidget(QWidget):
         self._save_message = QLabel(self)
         self._layout_v1.addWidget(self._save_message)
 
+        self._layout_save_whole_cube = QVBoxLayout(self)
+        self._layout_save_whole_cube.setContentsMargins(0, 10, 0, 0)
+        self._layout_save_whole_cube.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self._layout_v1.addLayout(self._layout_save_whole_cube)
+
+        self._save_whole_button = QPushButton("Save Whole Hyperspectral Cube", self)
+        self._save_whole_button.setFixedWidth(250)
+        self._save_whole_button.clicked.connect(self._save_whole_hsi_cube)
+        self._layout_save_whole_cube.addWidget(self._save_whole_button)
+
+        self._save_message_whole = QLabel(self)
+        self._layout_save_whole_cube.addWidget(self._save_message_whole)
+
+        self._layout_v1.addWidget(qt_line.QHLine())
+
+        self._layout_options = QVBoxLayout(self)
+        self._layout_options.setContentsMargins(0, 10, 0, 0)
+        self._layout_options.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self._layout_v1.addLayout(self._layout_options)
+
+        self._nparray_checkbox = QCheckBox(self, text='Save as binary numpy array')
+        self._layout_options.addWidget(self._nparray_checkbox)
+
         self._int_value_selector = int_input_qt.LabelledIntField("Subdivision Size", initial_value=128, width=100)
-        self._layout_v1.addWidget(self._int_value_selector)
+        self._layout_options.addWidget(self._int_value_selector)
 
         # Second panel
         self._layout_v2 = QVBoxLayout(self)
@@ -59,9 +83,26 @@ class SaveTabWidget(QWidget):
                                                           directory='D:\\Github\\InteractiveVineyardClassification'
                                                                     '\\Datasets\\',)
 
-        if self._filename is not None:
+        if self._filename:
             self._save_message.setText('Directory: ' + self._filename)
+            self._filename += '/'
         else:
             self._save_message.setText('')
+            return
 
-        self._hsi_database.save_hsi_chunks(self._filename, self._int_value_selector.get_value())
+        self._hsi_database.save_hsi_chunks(self._filename, self._int_value_selector.get_value(),
+                                           as_nparray=self._nparray_checkbox.isChecked())
+
+    def _save_whole_hsi_cube(self):
+        self._filename = QFileDialog.getExistingDirectory(self, 'Select Directory',
+                                                          directory='D:\\Github\\InteractiveVineyardClassification'
+                                                                    '\\Datasets\\',)
+
+        if self._filename:
+            self._save_message_whole.setText('Directory: ' + self._filename)
+            self._filename += '/'
+        else:
+            self._save_message_whole.setText('')
+            return
+
+        self._hsi_database.save_whole_hsi_cube(self._filename)

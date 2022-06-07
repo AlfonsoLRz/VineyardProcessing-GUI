@@ -1,4 +1,6 @@
 import cv2
+
+import app_params
 import hsi_database
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
@@ -11,6 +13,8 @@ class VisualizationWidget(QWidget):
         QWidget.__init__(self, parent)
 
         self._hsi_database = hsi_database.HSIDatabase()
+        self._app_params = app_params.ApplicationParameters()
+
         self._layer_selected = 0
         self._qt_image_orig = None
         self._qt_image_ndvi = None
@@ -90,6 +94,7 @@ class VisualizationWidget(QWidget):
         self.__update_image(only_orig=True)
 
     def _on_threshold_change(self):
+        self._app_params._threshold = self._threshold_selector.value() / 100.0
         self._threshold_label.setText("NDVI Thresholding Factor: " + str(self._threshold_selector.value() / 100.0))
         self.__update_image(only_ndvi=True)
 
@@ -99,12 +104,12 @@ class VisualizationWidget(QWidget):
             self._image_label_ndvi.setPixmap(qt_utilities.rescale_qt_image(self._qt_image_ndvi, self.width(), self.height()))
 
         if self._qt_image_class is not None:
-            self._image_label_ndvi.setPixmap(qt_utilities.rescale_qt_image(self._qt_image_class, self.width(), self.height()))
+            self._image_label_class.setPixmap(qt_utilities.rescale_qt_image(self._qt_image_class, self.width(), self.height()))
 
     def update(self):
         hsi_cube = self._hsi_database.get_hsi_data()
         if hsi_cube is not None:
-            self._layer_selector.setMaximum(hsi_cube.num_layers())
+            self._layer_selector.setMaximum(hsi_cube.num_layers() - 1)
         else:
             self._layer_selector.setMaximum(0)
         self._layer_selector.setMinimum(0)

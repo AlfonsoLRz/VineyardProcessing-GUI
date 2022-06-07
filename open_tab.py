@@ -39,7 +39,7 @@ class OpenTabWidget(QWidget):
         # Get classification file
         self._layout_v2 = QVBoxLayout(self)
         self._layout_v2.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self._layout_v2.setContentsMargins(0, 30, 0, 0)
+        self._layout_v2.setContentsMargins(0, 10, 0, 0)
         self._layout_v1.addLayout(self._layout_v2)
 
         self._open_class_img_button = QPushButton("Open Hyperspectral Classification", self)
@@ -70,8 +70,6 @@ class OpenTabWidget(QWidget):
                                                                                    'InteractiveVineyardClassification'
                                                                                    '\\Datasets\\',
                                                                 '"Classification files (*.png)"')[0]
-
-        print(self._classification_file)
 
         if self._classification_file:
             self._class_img_label.setText('HSI File: ' + self._classification_file)

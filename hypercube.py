@@ -1,3 +1,4 @@
+import app_params as ap
 import cv2
 import math
 import numpy as np
@@ -38,6 +39,9 @@ class Hypercube:
 
         return self.__to_uint_img(ndvi)
 
+    def _combine(self, binary_mask, classification_image):
+        return cv2.bitwise_and(binary_mask, classification_image)
+
     def export_binary_file(self, path, threshold):
         # Write with OpenCV the binary file
         cv2.imwrite(path, self.calculate_ndvi(threshold=threshold, thresholding=True))
@@ -45,10 +49,16 @@ class Hypercube:
     def num_layers(self):
         return self._dimensions[2]
 
-    def save_chunks(self, path, chunk_size, classification_img):
+    def save_chunks(self, path, chunk_size, classification_img, as_nparray=False):
         num_divs = (self._dimensions[0] // chunk_size, self._dimensions[1] // chunk_size)
         diff = (self._dimensions[0] - num_divs[0] * chunk_size, self._dimensions[1] - num_divs[1] * chunk_size)
         start_index = (diff[0] // 2, diff[1] // 2.0)
+
+        # Transform classification image to match the NDVI mask
+        app_params = ap.ApplicationParameters()
+        if classification_img is not None:
+            classification_img = self._combine(classification_img, self.calculate_ndvi(thresholding=True,
+                                                                                       threshold=app_params.get_threshold()))
 
         chunk_idx = 0
         for i in range(num_divs[0]):
@@ -57,7 +67,11 @@ class Hypercube:
                     (int(start_index[0] + i * chunk_size), int(start_index[0] + (i + 1) * chunk_size)),
                     (int(start_index[1] + j * chunk_size), int(start_index[1] + (j + 1) * chunk_size)))
 
-                envi.save_image(path + 'chunk_' + str(chunk_idx) + '.hdr', chunk, force=True)
+                if as_nparray:
+                    chunk = np.array(chunk)
+                    np.save(path + 'chunk_{}'.format(chunk_idx), chunk)
+                else:
+                    envi.save_image(path + 'chunk_' + str(chunk_idx) + '.hdr', chunk, force=True)
                 save_rgb(path + 'chunk_' + str(chunk_idx) + '.png', chunk, format='png')
 
                 # Save classification image
@@ -68,7 +82,25 @@ class Hypercube:
                                                                   int(start_index[1] + (j + 1) * chunk_size), :]
                     cv2.imwrite(path + 'chunk_' + str(chunk_idx) + '_classification.png', classification_img_chunk)
 
+                    classification_id_image = self._to_id_image(classification_img_chunk)
+                    np.save(path + 'chunk_' + str(chunk_idx) + '_classification', classification_id_image)
+
                 chunk_idx += 1
+
+    def save_whole_cube(self, path, classification_image):
+        np.save(path + 'cube', self._hypercube)
+
+        if classification_image is not None:
+            # Transform classification image to match the NDVI mask
+            app_params = ap.ApplicationParameters()
+            classification_image = self._combine(classification_image, self.calculate_ndvi(thresholding=True,
+                                                                                           threshold=app_params.
+                                                                                           get_threshold()))
+
+            cv2.imwrite(path + 'classification.png', classification_image)
+
+            classification_id_image = self._to_id_image(classification_image)
+            np.save(path + 'classification', classification_id_image)
 
     def __search_nearest_layer(self, wl):
         begin, end, index = 0, len(self._wavelength_labels) - 1, 0
@@ -91,6 +123,22 @@ class Hypercube:
                 return index
             else:
                 return index + 1
+
+    def _to_id_image(self, img):
+        h = img.shape[0]
+        w = img.shape[1]
+        id_image = np.zeros(shape=(h, w))
+        color_dict = { (0, 0, 0): 0 }
+
+        for y in range(0, h):
+            for x in range(0, w):
+                color = (int(img[y, x, 0]), int(img[y, x, 1]), int(img[y, x, 2]))
+                if color not in color_dict:
+                    color_dict[color] = len(color_dict)
+
+                id_image[y, x] = color_dict[color]
+
+        return id_image
 
     def __to_uint_img(self, flt_img):
         uint_img = flt_img.astype('uint8')      # To 8 bits
