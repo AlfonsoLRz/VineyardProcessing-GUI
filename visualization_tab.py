@@ -83,10 +83,10 @@ class VisualizationWidget(QWidget):
 
     def _export_binary_file(self):
         name = QFileDialog.getSaveFileName(self, 'Save File')
-
-        hsi_cube = self._hsi_database.get_hsi_data()
-        if hsi_cube is not None:
-            hsi_cube.export_binary_file(name[0], self._threshold_selector.value() / 100.0)
+        if name[0] != '':
+            hsi_cube = self._hsi_database.get_hsi_data()
+            if hsi_cube is not None:
+                hsi_cube.export_binary_file(name[0], self._threshold_selector.value() / 100.0)
 
     def _on_layer_change(self):
         self._selector_label.setText("Layer Selection: " + str(self._layer_selector.value()))

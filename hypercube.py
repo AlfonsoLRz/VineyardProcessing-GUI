@@ -52,13 +52,14 @@ class Hypercube:
     def save_chunks(self, path, chunk_size, classification_img, as_nparray=False):
         num_divs = (self._dimensions[0] // chunk_size, self._dimensions[1] // chunk_size)
         diff = (self._dimensions[0] - num_divs[0] * chunk_size, self._dimensions[1] - num_divs[1] * chunk_size)
-        start_index = (diff[0] // 2, diff[1] // 2.0)
+        start_index = (diff[0] // 2, diff[1] // 2)
 
         # Transform classification image to match the NDVI mask
         app_params = ap.ApplicationParameters()
         if classification_img is not None:
             classification_img = self._combine(classification_img, self.calculate_ndvi(thresholding=True,
                                                                                        threshold=app_params.get_threshold()))
+            classification_img_id = self._to_id_image(classification_img)
 
         chunk_idx = 0
         for i in range(num_divs[0]):
@@ -79,11 +80,13 @@ class Hypercube:
                     classification_img_chunk = classification_img[int(start_index[0] + i * chunk_size):
                                                                   int(start_index[0] + (i + 1) * chunk_size),
                                                                   int(start_index[1] + j * chunk_size):
-                                                                  int(start_index[1] + (j + 1) * chunk_size), :]
+                                                                  int(start_index[1] + (j + 1) * chunk_size),:]
+                    classification_img_id_chunk = classification_img_id[int(start_index[0] + i * chunk_size):
+                                                                  int(start_index[0] + (i + 1) * chunk_size),
+                                                                  int(start_index[1] + j * chunk_size):
+                                                                  int(start_index[1] + (j + 1) * chunk_size)]
                     cv2.imwrite(path + 'chunk_' + str(chunk_idx) + '_classification.png', classification_img_chunk)
-
-                    classification_id_image = self._to_id_image(classification_img_chunk)
-                    np.save(path + 'chunk_' + str(chunk_idx) + '_classification', classification_id_image)
+                    np.save(path + 'chunk_' + str(chunk_idx) + '_classification', classification_img_id_chunk)
 
                 chunk_idx += 1
 
