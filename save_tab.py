@@ -14,6 +14,7 @@ class SaveTabWidget(QWidget):
 
         self._hsi_database = hsi_database.HSIDatabase()
         self._filename = ''
+        self._save_dir = 'D:\\Github\\InteractiveVineyardClassification\\Datasets\\'
 
         self._main_layout = QHBoxLayout(self)
         self._main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -79,13 +80,12 @@ class SaveTabWidget(QWidget):
         #    self._image_label.setPixmap(qt_utilities.rescale_qt_image(self._qt_image, self.width(), self.height()))
 
     def _save_hsi_chunks(self):
-        self._filename = QFileDialog.getExistingDirectory(self, 'Select Directory',
-                                                          directory='D:\\Github\\InteractiveVineyardClassification'
-                                                                    '\\Datasets\\',)
+        self._filename = QFileDialog.getExistingDirectory(self, 'Select Directory', directory=self._save_dir,)
 
         if self._filename:
             self._save_message.setText('Directory: ' + self._filename)
             self._filename += '/'
+            self._save_dir = self._filename
         else:
             self._save_message.setText('')
             return
@@ -94,13 +94,12 @@ class SaveTabWidget(QWidget):
                                            as_nparray=self._nparray_checkbox.isChecked())
 
     def _save_whole_hsi_cube(self):
-        self._filename = QFileDialog.getExistingDirectory(self, 'Select Directory',
-                                                          directory='D:\\Github\\InteractiveVineyardClassification'
-                                                                    '\\Datasets\\',)
+        self._filename = QFileDialog.getExistingDirectory(self, 'Select Directory', directory=self._save_dir)
 
         if self._filename:
             self._save_message_whole.setText('Directory: ' + self._filename)
             self._filename += '/'
+            self._save_dir = self._filename
         else:
             self._save_message_whole.setText('')
             return

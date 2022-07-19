@@ -13,6 +13,7 @@ class OpenTabWidget(QWidget):
         self._hsi_filename = ""
         self._classification_file = ""
         self._qt_image = None
+        self._previous_dir = 'D:\\Github\\InteractiveVineyardClassification\\Datasets\\'
 
         self._main_layout = QHBoxLayout(self)
         self._main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -66,14 +67,13 @@ class OpenTabWidget(QWidget):
         self._layout_v2.addWidget(self._image_label)
 
     def _get_class_img(self):
-        self._classification_file = QFileDialog.getOpenFileName(self, 'Open file', 'D:\\Github\\'
-                                                                                   'InteractiveVineyardClassification'
-                                                                                   '\\Datasets\\',
+        self._classification_file = QFileDialog.getOpenFileName(self, 'Open file', self._previous_dir,
                                                                 '"Classification files (*.png)"')[0]
 
         if self._classification_file:
             self._class_img_label.setText('HSI File: ' + self._classification_file)
             self._class_img_label.setStyleSheet("QLabel{font-size: 8pt;}")
+            self._previous_dir = self._classification_file[0:self._classification_file.rfind('/')]
 
             if self._hsi_database.load_classification_img(self._classification_file):
                 self._load_img_message.setText('Loaded successfully...')
@@ -84,13 +84,13 @@ class OpenTabWidget(QWidget):
                 self._classification_file = ''
 
     def _get_hsi_file(self):
-        self._hsi_filename = QFileDialog.getOpenFileName(self, 'Open file', 'D:\\Github\\InteractiveVineyardClassification'
-                                                                         '\\Datasets\\', '"HSI files (*.hdr)"')[0]
+        self._hsi_filename = QFileDialog.getOpenFileName(self, 'Open file', self._previous_dir, '"HSI files (*.hdr)"')[0]
         self._hsi_filename = self._hsi_filename.split('.')[0]
 
         if self._hsi_filename:
             self._filename_label.setText('HSI File: ' + self._hsi_filename)
             self._filename_label.setStyleSheet("QLabel{font-size: 8pt;}")
+            self._previous_dir = self._hsi_filename[0:self._hsi_filename.rfind('/')]
 
             if self._hsi_database.load_hsi_data(self._hsi_filename):
                 self._load_message.setText('Loaded successfully...')
