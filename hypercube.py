@@ -49,10 +49,11 @@ class Hypercube:
     def num_layers(self):
         return self._dimensions[2]
 
-    def save_chunks(self, path, chunk_size, classification_img, as_nparray=False):
+    def save_chunks(self, path, chunk_size, overlapping, classification_img, as_nparray=False):
         num_divs = (self._dimensions[0] // chunk_size, self._dimensions[1] // chunk_size)
         diff = (self._dimensions[0] - num_divs[0] * chunk_size, self._dimensions[1] - num_divs[1] * chunk_size)
         start_index = (diff[0] // 2, diff[1] // 2)
+        jump = chunk_size - overlapping
 
         # Transform classification image to match the NDVI mask
         app_params = ap.ApplicationParameters()
@@ -62,11 +63,13 @@ class Hypercube:
             classification_img_id = self._to_id_image(classification_img)
 
         chunk_idx = 0
-        for i in range(num_divs[0]):
-            for j in range(num_divs[1]):
-                chunk = self._hypercube.read_subregion(
-                    (int(start_index[0] + i * chunk_size), int(start_index[0] + (i + 1) * chunk_size)),
-                    (int(start_index[1] + j * chunk_size), int(start_index[1] + (j + 1) * chunk_size)))
+        x, y = 0, 0
+
+        while x + chunk_size < self._dimensions[0]:
+            y = 0
+
+            while y + chunk_size < self._dimensions[1]:
+                chunk = self._hypercube.read_subregion((int(x), int(x + chunk_size)), (int(y), int(y + chunk_size)))
 
                 if as_nparray:
                     chunk = np.array(chunk)
@@ -77,18 +80,17 @@ class Hypercube:
 
                 # Save classification image
                 if classification_img is not None:
-                    classification_img_chunk = classification_img[int(start_index[0] + i * chunk_size):
-                                                                  int(start_index[0] + (i + 1) * chunk_size),
-                                                                  int(start_index[1] + j * chunk_size):
-                                                                  int(start_index[1] + (j + 1) * chunk_size),:]
-                    classification_img_id_chunk = classification_img_id[int(start_index[0] + i * chunk_size):
-                                                                  int(start_index[0] + (i + 1) * chunk_size),
-                                                                  int(start_index[1] + j * chunk_size):
-                                                                  int(start_index[1] + (j + 1) * chunk_size)]
+                    classification_img_chunk = classification_img[int(x):int(x + chunk_size),
+                                                                  int(y):int(y + chunk_size), :]
+                    classification_img_id_chunk = classification_img_id[int(x):int(x + chunk_size),
+                                                                        int(y):int(y + chunk_size)]
                     cv2.imwrite(path + 'chunk_' + str(chunk_idx) + '_classification.png', classification_img_chunk)
                     np.save(path + 'chunk_' + str(chunk_idx) + '_classification', classification_img_id_chunk)
 
+                y += jump
                 chunk_idx += 1
+
+            x += jump
 
     def save_whole_cube(self, path, classification_image):
         np.save(path + 'cube', self._hypercube)

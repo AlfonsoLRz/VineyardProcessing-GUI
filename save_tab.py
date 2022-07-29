@@ -59,7 +59,15 @@ class SaveTabWidget(QWidget):
         self._nparray_checkbox = QCheckBox(self, text='Save as binary numpy array')
         self._layout_options.addWidget(self._nparray_checkbox)
 
+        self._overlapping_label = QLabel()
+        self._overlapping_selector = QSlider(Qt.Orientation.Horizontal, self, minimum=0, maximum=128-1)
+        self._overlapping_selector.setValue(128 // 2)
+        self._overlapping_selector.valueChanged.connect(self._on_overlapping_change)
+        self._layout_options.addWidget(self._overlapping_label)
+        self._layout_options.addWidget(self._overlapping_selector)
+
         self._int_value_selector = int_input_qt.LabelledIntField("Subdivision Size", initial_value=128, width=100)
+        self._int_value_selector.get_change_signal().connect(self._on_size_change)
         self._layout_options.addWidget(self._int_value_selector)
 
         # Second panel
@@ -74,10 +82,22 @@ class SaveTabWidget(QWidget):
         self._image_label.setPixmap(default_image)
         self._layout_v2.addWidget(self._image_label)
 
+        self._on_overlapping_change()
+
     def resizeEvent(self, a0: QResizeEvent) -> None:
         print('')
         #if self._qt_image is not None:
         #    self._image_label.setPixmap(qt_utilities.rescale_qt_image(self._qt_image, self.width(), self.height()))
+
+    def _on_overlapping_change(self):
+        self._overlapping_label.setText('Overlapping: ' + str(self._overlapping_selector.value()))
+
+    def _on_size_change(self):
+        self._overlapping_selector.setMaximum(self._int_value_selector.get_value() - 1)
+
+        if self._overlapping_selector.value() >= self._int_value_selector.get_value():
+            self._overlapping_selector.setValue(self._int_value_selector.get_value() - 1)
+            self._on_overlapping_change()
 
     def _save_hsi_chunks(self):
         self._filename = QFileDialog.getExistingDirectory(self, 'Select Directory', directory=self._save_dir,)
@@ -91,6 +111,7 @@ class SaveTabWidget(QWidget):
             return
 
         self._hsi_database.save_hsi_chunks(self._filename, self._int_value_selector.get_value(),
+                                           self._overlapping_selector.value(),
                                            as_nparray=self._nparray_checkbox.isChecked())
 
     def _save_whole_hsi_cube(self):

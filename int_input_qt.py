@@ -34,5 +34,8 @@ class LabelledIntField(QWidget):
     def set_input_width(self, width):
         self.lineEdit.setFixedWidth(width)
 
+    def get_change_signal(self):
+        return self.lineEdit.textChanged
+
     def get_value(self):
         return int(self.lineEdit.text())

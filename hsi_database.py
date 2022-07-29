@@ -22,9 +22,9 @@ class HSIDatabase(metaclass=singleton.SingletonMeta):
         self._hsi_cube = hypercube.Hypercube(path + '.hdr')
         return self._hsi_cube is not None
 
-    def save_hsi_chunks(self, path, chunk_size, as_nparray=False):
+    def save_hsi_chunks(self, path, chunk_size, overlapping, as_nparray=False):
         if self._hsi_cube is not None:
-            self._hsi_cube.save_chunks(path, chunk_size, self._classification_img, as_nparray=as_nparray)
+            self._hsi_cube.save_chunks(path, chunk_size, overlapping, self._classification_img, as_nparray=as_nparray)
 
     def save_whole_hsi_cube(self, path):
         if self._hsi_cube is not None:
