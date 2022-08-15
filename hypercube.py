@@ -16,6 +16,7 @@ class Hypercube:
         self._hypercube = open_image(header_path).load()
         self._wavelength_labels = self._hypercube.bands.centers
         self._dimensions = self._hypercube.shape
+        self._name = self._hypercube.filename.split('/')[-1].split('.')[0]
 
     def band_to_cv_image(self, band):
         band_list = self._hypercube.read_band(band)
@@ -75,8 +76,8 @@ class Hypercube:
                     chunk = np.array(chunk)
                     np.save(path + 'chunk_{}'.format(chunk_idx), chunk)
                 else:
-                    envi.save_image(path + 'chunk_' + str(chunk_idx) + '.hdr', chunk, force=True)
-                save_rgb(path + 'chunk_' + str(chunk_idx) + '.png', chunk, format='png')
+                    envi.save_image(path + self._name + '_' + str(chunk_idx) + '.hdr', chunk, force=True)
+                save_rgb(path + self._name + '_' + str(chunk_idx) + '.png', chunk, format='png')
 
                 # Save classification image
                 if classification_img is not None:
@@ -84,8 +85,8 @@ class Hypercube:
                                                                   int(y):int(y + chunk_size), :]
                     classification_img_id_chunk = classification_img_id[int(x):int(x + chunk_size),
                                                                         int(y):int(y + chunk_size)]
-                    cv2.imwrite(path + 'chunk_' + str(chunk_idx) + '_classification.png', classification_img_chunk)
-                    np.save(path + 'chunk_' + str(chunk_idx) + '_classification', classification_img_id_chunk)
+                    cv2.imwrite(path + self._name + '_' + str(chunk_idx) + '_class.png', classification_img_chunk)
+                    np.save(path + self._name + '_' + str(chunk_idx) + '_class.png', classification_img_id_chunk)
 
                 y += jump
                 chunk_idx += 1
@@ -102,10 +103,10 @@ class Hypercube:
                                                                                            threshold=app_params.
                                                                                            get_threshold()))
 
-            cv2.imwrite(path + 'classification.png', classification_image)
+            cv2.imwrite(path + self._name + '_class.png', classification_image)
 
             classification_id_image = self._to_id_image(classification_image)
-            np.save(path + 'classification', classification_id_image)
+            np.save(path + self._name + '_class', classification_id_image)
 
     def __search_nearest_layer(self, wl):
         begin, end, index = 0, len(self._wavelength_labels) - 1, 0
