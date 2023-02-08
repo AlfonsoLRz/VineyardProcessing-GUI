@@ -72,7 +72,17 @@ class VisualizationWidget(QWidget):
         self._layout_v3.setContentsMargins(0, 30, 0, 0)
         self._layout_v2.addLayout(self._layout_v3)
 
-        self._export_binary_button = QPushButton("Export Binary File")
+        self._export_rgb_button = QPushButton("Export RGB")
+        self._export_rgb_button.setFixedWidth(250)
+        self._export_rgb_button.clicked.connect(self._export_rgb_file)
+        self._layout_v3.addWidget(self._export_rgb_button)
+
+        self._export_ndvi_button = QPushButton("Export NDVI")
+        self._export_ndvi_button.setFixedWidth(250)
+        self._export_ndvi_button.clicked.connect(self._export_ndvi_file)
+        self._layout_v3.addWidget(self._export_ndvi_button)
+
+        self._export_binary_button = QPushButton("Export Binary")
         self._export_binary_button.setFixedWidth(250)
         self._export_binary_button.clicked.connect(self._export_binary_file)
         self._layout_v3.addWidget(self._export_binary_button)
@@ -87,6 +97,20 @@ class VisualizationWidget(QWidget):
             hsi_cube = self._hsi_database.get_hsi_data()
             if hsi_cube is not None:
                 hsi_cube.export_binary_file(name[0], self._threshold_selector.value() / 100.0)
+
+    def _export_ndvi_file(self):
+        name = QFileDialog.getSaveFileName(self, 'Save File')
+        if name[0] != '':
+            hsi_cube = self._hsi_database.get_hsi_data()
+            if hsi_cube is not None:
+                hsi_cube.export_ndvi_file(name[0])
+
+    def _export_rgb_file(self):
+        name = QFileDialog.getSaveFileName(self, 'Save File')
+        if name[0] != '':
+            hsi_cube = self._hsi_database.get_hsi_data()
+            if hsi_cube is not None:
+                hsi_cube.export_rgb_file(name[0])
 
     def _on_layer_change(self):
         self._selector_label.setText("Layer Selection: " + str(self._layer_selector.value()))

@@ -28,7 +28,7 @@ class Hypercube:
 
         return self.__to_uint_img(flt_img)
 
-    def calculate_ndvi(self, thresholding=True, threshold=.5):
+    def calculate_ndvi(self, thresholding=True, threshold=.5, normalize=False):
         nir_band = np.array(self._hypercube.read_band(self.__search_nearest_layer(self.NIR_WL)))
         red_band = np.array(self._hypercube.read_band(self.__search_nearest_layer(self.RED_WL)))
         ndvi = (nir_band - red_band) / (nir_band + red_band)
@@ -37,8 +37,20 @@ class Hypercube:
             ndvi = np.where(ndvi > threshold, 255.0, .0)
         else:
             ndvi = ndvi
+            if normalize:
+                ndvi = (ndvi - np.min(ndvi)) / (np.max(ndvi) - np.min(ndvi)) * 255.0
 
         return self.__to_uint_img(ndvi)
+
+    def calculate_rgb(self):
+        red_band = np.array(self._hypercube.read_band(self.__search_nearest_layer(self.RED_WL)))
+        green_band = np.array(self._hypercube.read_band(self.__search_nearest_layer(self.GREEN_WL)))
+        blue_band = np.array(self._hypercube.read_band(self.__search_nearest_layer(self.BLUE_WL)))
+
+        rgb_image = np.dstack((red_band, green_band, blue_band))
+        rgb_image = (rgb_image - np.min(rgb_image)) / (np.max(rgb_image) - np.min(rgb_image)) * 255.0
+
+        return rgb_image.astype('uint8')
 
     def _combine(self, binary_mask, classification_image):
         return cv2.bitwise_and(binary_mask, classification_image)
@@ -46,6 +58,14 @@ class Hypercube:
     def export_binary_file(self, path, threshold):
         # Write with OpenCV the binary file
         cv2.imwrite(path, self.calculate_ndvi(threshold=threshold, thresholding=True))
+
+    def export_ndvi_file(self, path):
+        # Write with OpenCV the binary file
+        cv2.imwrite(path, self.calculate_ndvi(thresholding=False, normalize=True))
+
+    def export_rgb_file(self, path):
+        # Write with OpenCV the binary file
+        cv2.imwrite(path, self.calculate_rgb())
 
     def num_layers(self):
         return self._dimensions[2]
