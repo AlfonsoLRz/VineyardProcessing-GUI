@@ -1,2 +1,2 @@
 # ProcessingVineyard-GUI
- Interactive tool for preparing hyperspectral vineyard hypercubes prior to ML/DL.
+Interactive tool for preparing hyperspectral vineyard hypercubes to feed ML/DL algorithms.
